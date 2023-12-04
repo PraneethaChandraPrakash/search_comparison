@@ -37,6 +37,28 @@ LinkedList readAndStoreData(char *filename);
 void writeListToFile(LinkedList list, char *filename);
 int countElements(LinkedList list);
 
+void writeListToFile(LinkedList list, char *filename)
+{
+    FILE *file = fopen(filename, "w");
+    if (!file)
+    {
+        printf("Error opening file %s for writing.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    Game *current = list.head;
+
+    while (current != NULL)
+    {
+        fprintf(file, "%d,%s,%.2f,%d,%s,%d\n",
+                current->id, current->name, current->avg_user_rating, current->user_rating_count,
+                current->developer, current->size);
+
+        current = current->next;
+    }
+
+    fclose(file);
+}
 void insertionSort(LinkedList *list)
 {
     if (list == NULL || list->head == NULL)
@@ -98,37 +120,11 @@ void insertionSort(LinkedList *list)
     }
     list->tail = tail;
 }
-void writeListToFile(LinkedList list, char *filename)
-{
-    FILE *file = fopen(filename, "w");
-    if (!file)
-    {
-        printf("Error opening file %s for writing.\n", filename);
-        exit(EXIT_FAILURE);
-    }
-
-    Game *current = list.head;
-
-    while (current != NULL)
-    {
-        fprintf(file, "%d,%s,%.2f,%d,%s,%d\n",
-                current->id, current->name, current->avg_user_rating, current->user_rating_count,
-                current->developer, current->size);
-
-        current = current->next;
-    }
-
-    fclose(file);
-}
 
 long measureTime(void (*sortFunction)(LinkedList *), LinkedList *list)
 {
-
     // Start measuring time
-
     struct timespec start, end;
-
-    /* read consecutive nanosecond values */
     clock_gettime(CLOCK_REALTIME, &start);
 
     // Call the sorting function
@@ -138,18 +134,16 @@ long measureTime(void (*sortFunction)(LinkedList *), LinkedList *list)
     clock_gettime(CLOCK_REALTIME, &end);
 
     // Calculate and print the search time in nanoseconds
-    // long long searchTime = (end.tv_nsec - start.tv_nsec);
-
-    long sortTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
+    long long sortTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
 
     return sortTime;
 }
 
-void swap(Game *a, Game *b)
+void swap(Game *game_a, Game *game_b)
 {
-    Game t = *a;
-    *a = *b;
-    *b = t;
+    Game t = *game_a;
+    *game_a = *game_b;
+    *game_b = t;
 }
 
 Game *partition(Game *low, Game *high)
@@ -190,7 +184,6 @@ void quickSortLinkedList(LinkedList *list)
 
     quicksort(list->head, list->tail);
 }
-
 // Function to parse a line and extract game data
 void parseLine(char *line, struct Game *newGame)
 {
@@ -207,24 +200,31 @@ void parseLine(char *line, struct Game *newGame)
         switch (index)
         {
         case 0:
+            // Convert the token to an integer and assign it to the 'id' field
             newGame->id = atoi(token);
             break;
         case 1:
+            // Copy the token to the 'name' field, ensuring it fits within the size of the field
             strncpy(newGame->name, token, sizeof(newGame->name));
             break;
         case 2:
+            // Convert the token to a floating-point number and assign it to 'avg_user_rating'
             newGame->avg_user_rating = atof(token);
             break;
         case 3:
+            // Convert the token to an integer and assign it to 'user_rating_count'
             newGame->user_rating_count = atoi(token);
             break;
         case 4:
+            // Copy the token to the 'developer' field, ensuring it fits within the size of the field
             strncpy(newGame->developer, token, sizeof(newGame->developer));
             break;
         case 5:
+            // Convert the token to an integer and assign it to the 'size' field
             newGame->size = atoi(token);
             break;
         }
+        // Move to the next field
         index++;
     }
 }
@@ -262,7 +262,8 @@ LinkedList readAndStoreData(char *filename)
         // Remove newline character at the end, if present
         line[strcspn(line, "\n")] = '\0';
 
-
+         // Parse the line using strsep
+        parseLine(line, &newGame);
         // Allocate memory for a new node to store the game data
         Game *newGameNode = malloc(sizeof(Game));
         if (!newGameNode)
@@ -359,11 +360,13 @@ LinkedList readAndStoreData(char *filename)
     return gamesLinkedList;
 }
 
+// Function to measure the execution time of a search function
 long searchTimeMeasure(void (*searchFunction)(void *, char *), void *data, char *searchName)
 {
+    // Variables to store the start and end times
     struct timespec start, end;
 
-    // Start measuring time
+    // Start measuring time using CLOCK_REALTIME
     clock_gettime(CLOCK_REALTIME, &start);
 
     // Call the search function
@@ -373,49 +376,64 @@ long searchTimeMeasure(void (*searchFunction)(void *, char *), void *data, char 
     clock_gettime(CLOCK_REALTIME, &end);
 
     // Calculate and print the search time in nanoseconds
+    // Convert seconds to nanoseconds and add the remaining nanoseconds
     long searchTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
 
+    // Return the measured search time in nanoseconds
     return searchTime;
 }
+
+// Function to perform linear search in a linked list based on game name
 void linearSearch(void *data, char *searchName)
 {
     LinkedList *list = (LinkedList *)data;
     Game *current = list->head;
     int searchCount = 0;
 
+    // Iterate through the linked list until the end or until the game is found
     while (current != NULL)
     {
+        // Increment the search count for each iteration
         searchCount++;
+
+        // Compare the name of the current game with the target search name
         if (strcmp(current->name, searchName) == 0)
         {
-            // Game found
+            // Exit loop if game is found
             break;
         }
+
+        // Move to the next node in the linked list
         current = current->next;
     }
 }
 
+// Function to perform binary search using binary search tree 
 void binarySearch(void *data, char *searchName)
 {
     BSTNode *root = (BSTNode *)data;
     BSTNode *current = root;
     int searchCount = 0;
 
+    // Iterate through the BST until the end or until the game is found
     while (current != NULL)
     {
+        // Compare the name of the current game with the target search name
         int cmp = strcmp(current->game->name, searchName);
         if (cmp == 0)
         {
-            // Game found
+            // Exit loop if game is found
             searchCount++;
             break;
         }
         else if (cmp < 0)
         {
+            // Move to the right subtree
             current = current->right;
         }
         else
         {
+            // Move to the left subtree
             current = current->left;
         }
     }
@@ -426,7 +444,7 @@ BSTNode *insertBSTNode(BSTNode *root, Game *game)
 {
     if (root == NULL)
     {
-        // Create a new node for the game
+    // If the current subtree is empty, create a new node for the game
         BSTNode *newNode = (BSTNode *)malloc(sizeof(BSTNode));
         newNode->game = game;
         newNode->left = NULL;
@@ -434,9 +452,10 @@ BSTNode *insertBSTNode(BSTNode *root, Game *game)
         return newNode;
     }
 
-    // Compare the game names
+    // Compare the game names to determine the insertion direction
     int cmp = strcmp(root->game->name, game->name);
 
+    // Insert into the appropriate subtree based on the comparison result
     if (cmp < 0)
     {
         // Insert into the right subtree
@@ -454,17 +473,23 @@ BSTNode *insertBSTNode(BSTNode *root, Game *game)
 // Function to build a BST from a linked list
 BSTNode *buildBSTFromList(LinkedList *list)
 {
+    // Initialize the root of the BST to NULL
     BSTNode *root = NULL;
+
+    // Start with the head of the linked list
     Game *current = list->head;
 
+    // Iterate through the linked list and insert each game into the BST
     while (current != NULL)
     {
         root = insertBSTNode(root, current);
         current = current->next;
     }
 
+    // Return the root of the built BST
     return root;
 }
+
 
 int countElements(LinkedList list)
 {
@@ -480,13 +505,52 @@ int countElements(LinkedList list)
     return count;
 }
 
+void getRandomGames(LinkedList *gamesLinkedList, char searchNames[][100], int numGames)
+{
+    // Get the total number of elements in the linked list
+    int numElements = countElements(*gamesLinkedList);
+
+    // Check if the linked list is not empty and numGames is less than or equal to the total elements
+    if (numElements > 0 && numGames <= numElements)
+    {
+        for (int i = 0; i < numGames; i++)
+        {
+            // Generate a random index within the range of the linked list size
+            int randomIndex = rand() % numElements;
+
+            // Traverse the linked list to the randomly selected index
+            Game *current = gamesLinkedList->head;
+            for (int j = 0; j < randomIndex && current != NULL; j++)
+            {
+                current = current->next;
+            }
+
+            // Check if a valid game is found at the random index
+            if (current != NULL)
+            {
+                // Copy the game name to the searchNames array
+                strcpy(searchNames[i], current->name);
+            }
+            else
+            {
+                printf("Error: Unable to retrieve a random game.\n");
+                break; // Exit loop if an error occurs
+            }
+        }
+    }
+    else
+    {
+        printf("Error: The linked list is empty or numGames is invalid.\n");
+    }
+}
+
 int main()
 {
     char filename[] = "games.csv";
     LinkedList gamesLinkedList = readAndStoreData(filename);
 
     int numElements = countElements(gamesLinkedList);
-    printf("Number of elements in LinkedList: %d\n", numElements);
+    printf("Number of elements in LinkedList: %d\n\n", numElements);
     writeListToFile(gamesLinkedList, "output.txt");
 
     // Linear Search Test
@@ -494,7 +558,11 @@ int main()
 
     // Search for specific games and measure search time
     // char searchNames[][100] = {"Sudoku", "Reversi", "Morocco", "Sudoku (Free)", "Space Control"};
-    char searchNames[][100] = {"Transport Empire", "European War", "Zen Wars", "Pebbles", "Jisgaw +0.5K", "Bitcoin Billionaire"};
+    // Seed the random number generator
+    srand(time(NULL));
+    char searchNames[3][100];
+    getRandomGames(&gamesLinkedList, searchNames, 3);
+
     int numSearches = sizeof(searchNames) / sizeof(searchNames[0]);
 
     long totalSearchTime = 0;
@@ -515,11 +583,12 @@ int main()
     for (int i = 0; i < numSearches; i++)
     {
         long searchTime = searchTimeMeasure(linearSearch, &gamesLinkedList, searchNames[i]);
-        printf("Searching for %s...\n", searchNames[i]);
-        printf("Single search time: %ld nanoseconds.\n", searchTime);
+        printf("\n\nSearch number %d:", i+1);
+        printf("\nSearching for %s...", searchNames[i]);
+        printf("\nSingle search time: %ld nanoseconds.\n", searchTime);
         totalSearchTime += searchTime;
 
-        printf("Average search time: %ld nanoseconds.\n\n", totalSearchTime / (i + 1));
+        printf("Average search time: %ld nanoseconds.\n", totalSearchTime / (i + 1));
     }
 
     // Sort the linked list by name using insertion sort
@@ -528,7 +597,7 @@ int main()
     quickSortLinkedList(&sortedGamesLinkedList);
     Game *currentSorted = sortedGamesLinkedList.head;
 
-    printf("\nAfter sorting: \n\n");
+    printf("\n\nAfter sorting: \n\n");
 
     // Print first 5 elements from linked list after sorting
     for (int i = 0; i < 5 && currentSorted != NULL; i++)
@@ -541,11 +610,11 @@ int main()
 
     // Measure time for insertion sort
     long insertionSortTime = measureTime(insertionSort, &sortedGamesLinkedList);
-    printf("Time for insertion sort: %ld nanoseconds.\n", insertionSortTime);
+    printf("\n\nTime for insertion sort: %ld nanoseconds.\n", insertionSortTime);
 
     // Measure time for quicksort
     long quickSortTime = measureTime(quickSortLinkedList, &sortedGamesLinkedList);
-    printf("Time for quicksort: %ld nanoseconds.\n", quickSortTime);
+    printf("Time for quicksort: %ld nanoseconds.\n\n\n", quickSortTime);
 
     printf("*** Binary Search Test ***\n\n");
     BSTNode *bstRoot = buildBSTFromList(&sortedGamesLinkedList);
@@ -557,7 +626,7 @@ int main()
     {
         // long searchTime = binarySearch(bstRoot, searchNames[i]);
         long searchTime = searchTimeMeasure(binarySearch, bstRoot, searchNames[i]);
-
+        printf("Search number %d:\n", i+1);
         printf("Searching for %s...\n", searchNames[i]);
         printf("Single search time: %ld nanoseconds.\n", searchTime);
         totalBinarySearchTime += searchTime;
@@ -601,7 +670,7 @@ int main()
         // Check if linear searches are more efficient than sorting once and binary searches
         if (totalLinearSearchTime < insertionSortTime + totalBinarySearchTime)
         {
-            printf("Break Point: Linear Searches become more efficient than Sorting Once and Binary Searches at m = %d\n", m);
+            printf("Break point m = %d between repeated linear searches and sort-once & multiple binary searches.\n",m);
             break;
         }
     }
