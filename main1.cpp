@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <chrono>
+#include <random>
+#include <ctime>
+#define NANOSECONDS_PER_SECOND 1000000000L
+
 
 using namespace std;
-
 
 struct GAME
 {
@@ -15,12 +18,6 @@ struct GAME
     char *developer;
     int size;
 };
-
-// FILE *game_file = NULL;
-GAME *parseLine(char *game);
-int generateRandomNumber(int max);
-void printGameItem(GAME *game);
-void swap(GAME *a, GAME *b);
 
 class Node
 {
@@ -58,7 +55,7 @@ public:
         return getSize() <= 0;
     }
 
-        void insertHead(Node *new_node)
+    void insertHead(Node *new_node)
     {
         if (isEmpty())
         {
@@ -138,7 +135,7 @@ public:
         }
     }
 
-    Node *findNodeByIndex(int index)
+    Node *getGameByIndex(int index)
     {
         if (isEmpty())
         {
@@ -156,6 +153,11 @@ public:
             counter++;
         }
         return currentNode;
+    }
+
+    void printGameItem(GAME *game)
+    {
+        cout << "# " << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
     }
 
     void printList()
@@ -178,7 +180,7 @@ public:
         Node *currentNode = this->head;
         while (currentNode != NULL)
         {
-            if (strcasecmp(currentNode->game->name, gameName) == 0)
+            if (strcmp(currentNode->game->name, gameName) == 0)
             {
                 return currentNode;
             }
@@ -231,7 +233,7 @@ public:
     // Helper function to insert a node into a sorted list
     void insertSorted(Node *&sorted, Node *new_node)
     {
-        if (sorted == NULL || strcasecmp(sorted->game->name, new_node->game->name) >= 0)
+        if (sorted == NULL || strcmp(sorted->game->name, new_node->game->name) >= 0)
         {
             new_node->next = sorted;
             new_node->prev = NULL;
@@ -242,7 +244,7 @@ public:
         else
         {
             Node *current = sorted;
-            while (current->next != NULL && strcasecmp(current->next->game->name, new_node->game->name) < 0)
+            while (current->next != NULL && strcmp(current->next->game->name, new_node->game->name) < 0)
             {
                 current = current->next;
             }
@@ -284,7 +286,7 @@ private:
 
         for (Node *j = start; j != end; j = j->next)
         {
-            if (strcasecmp(j->game->name, pivotName) < 0)
+            if (strcmp(j->game->name, pivotName) < 0)
             {
                 i = (i == NULL) ? start : i->next;
                 swap(i->game, j->game);
@@ -333,11 +335,11 @@ private:
             return new BSTNode(game);
         }
 
-        if (strcasecmp(game->name, node->game->name) < 0)
+        if (strcmp(game->name, node->game->name) < 0)
         {
             node->left = insertRecursive(node->left, game);
         }
-        else if (strcasecmp(game->name, node->game->name) > 0)
+        else if (strcmp(game->name, node->game->name) > 0)
         {
             node->right = insertRecursive(node->right, game);
         }
@@ -347,12 +349,12 @@ private:
 
     BSTNode *searchRecursive(BSTNode *node, char *target)
     {
-        if (node == NULL || strcasecmp(target, node->game->name) == 0)
+        if (node == NULL || strcmp(target, node->game->name) == 0)
         {
             return node;
         }
 
-        if (strcasecmp(target, node->game->name) < 0)
+        if (strcmp(target, node->game->name) < 0)
         {
             return searchRecursive(node->left, target);
         }
@@ -365,41 +367,80 @@ private:
 
 long long getTimeForLinearSearch(Node *gameNode, LinkedList *lList)
 {
-    // Record the start time
-    auto start_time = chrono::high_resolution_clock::now();
+   // Start measuring time
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
+
 
     // Perform the event or task you want to measure
     Node *randomNodeFoundWithName = lList->findNodeByGameName(gameNode->game->name);
 
-    // Record the end time
-    auto end_time = chrono::high_resolution_clock::now();
+   // Stop measuring time
+    clock_gettime(CLOCK_REALTIME, &end);
 
-    // Calculate the duration
-    auto duration = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+    // Calculate and print the search time in nanoseconds
+    long long sortTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
 
-    // Log the duration
-    // cout << "Event duration: " << duration.count() << " nanoseconds." << endl;
-    return duration.count();
+    return sortTime;
 }
 
 long long getTimeForBinarySearch(Node *gameNode, BinarySearchTree bst)
 {
-    // Record the start time
-    auto start_time = chrono::high_resolution_clock::now();
+// Start measuring time
+    struct timespec start, end;
+    clock_gettime(CLOCK_REALTIME, &start);
 
     // Perform the event or task you want to measure
     bst.search(gameNode->game->name);
 
-    // Record the end time
-    auto end_time = chrono::high_resolution_clock::now();
+    
+    // Stop measuring time
+    clock_gettime(CLOCK_REALTIME, &end);
 
-    // Calculate the duration
-    auto duration = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+    // Calculate and print the search time in nanoseconds
+    long long sortTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
 
-    // Log the duration
-    // cout << "Event duration: " << duration.count() << " nanoseconds." << endl;
-    return duration.count();
+    return sortTime;
 }
+
+
+// long long getTimeForLinearSearch(Node *gameNode, LinkedList *lList)
+// {
+//     // Record the start time
+//     auto start_time = chrono::high_resolution_clock::now();
+
+//     // Perform the event or task you want to measure
+//     Node *randomNodeFoundWithName = lList->findNodeByGameName(gameNode->game->name);
+
+//     // Record the end time
+//     auto end_time = chrono::high_resolution_clock::now();
+
+//     // Calculate the duration
+//     auto duration = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+
+//     // Log the duration
+//     // cout << "Event duration: " << duration.count() << " nanoseconds." << endl;
+//     return duration.count();
+// }
+
+// long long getTimeForBinarySearch(Node *gameNode, BinarySearchTree bst)
+// {
+//     // Record the start time
+//     auto start_time = chrono::high_resolution_clock::now();
+
+//     // Perform the event or task you want to measure
+//     bst.search(gameNode->game->name);
+
+//     // Record the end time
+//     auto end_time = chrono::high_resolution_clock::now();
+
+//     // Calculate the duration
+//     auto duration = chrono::duration_cast<chrono::nanoseconds>(end_time - start_time);
+
+//     // Log the duration
+//     // cout << "Event duration: " << duration.count() << " nanoseconds." << endl;
+//     return duration.count();
+// }
 
 LinkedList *copyLinkedList(LinkedList *originalList)
 {
@@ -424,244 +465,12 @@ LinkedList *copyLinkedList(LinkedList *originalList)
     return copiedList;
 }
 
-int main()
-{
-    FILE *game_file = fopen("games.csv", "r");
-
-     if (!game_file)
-    {
-        // Print an error message and exit if the file cannot be opened
-        printf("Error opening file \n");
-        exit(EXIT_FAILURE);
-    }
-
-    LinkedList *gamesLinkedList = new LinkedList(NULL);
-
-    char *line = NULL;
-    size_t linecap = 0;
-    ssize_t nbytes;
-    int count = 0;
-    /*
-    1) Read in the row from the given input file and store them in a doubly-linked list, called gamesLinkedList.
-     */
-     
-    while ((nbytes = getline(&line, &linecap, game_file)) > 0)
-    {
-        char *line_copy = line;
-        line_copy[strlen(line) - 1] = 0;
-        if (count > 0) // To skip the header
-        {
-            // Create a data structure to represent each game.
-            GAME *game = parseLine(line_copy);
-            // Store game in linkedList
-            Node *newGameNode = new Node(game);
-            // If there exist any duplicates based on name, store one with the higher “user rating count” only.
-            Node *duplicate = gamesLinkedList->findNodeByGameName(newGameNode->game->name);
-            if (duplicate != NULL)
-            {
-                // printGameItem(duplicate->game);
-                // printGameItem(newGameNode->game);
-                if (newGameNode->game->user_rating_count > duplicate->game->user_rating_count)
-                {
-                    // remove duplicate
-                    gamesLinkedList->remove(duplicate);
-                    // insert newGameNode
-                    gamesLinkedList->insertTail(newGameNode);
-                }
-            }
-            else
-            {
-                gamesLinkedList->insertTail(newGameNode);
-            }
-        }
-        count++;
-    }
-
-    // Make a copy to be used for quick sort
-    LinkedList *gamesLinkedListCopyForSort = copyLinkedList(gamesLinkedList);
-    // Make a copy to be used for linear search test later
-    LinkedList *gamesLinkedListCopyForLinearSearch = copyLinkedList(gamesLinkedList);
-    /*
- Randomly choose an item from the original linked list and then perform linear search based on the name of the item you chose.
- Report the item details you are searching for. Report the time spent searching for the item.
- */
-
-    Node *randomNode1 = gamesLinkedList->findNodeByIndex(generateRandomNumber(gamesLinkedList->size));
-    Node *randomNode2 = gamesLinkedList->findNodeByIndex(generateRandomNumber(gamesLinkedList->size));
-    Node *randomNode3 = gamesLinkedList->findNodeByIndex(generateRandomNumber(gamesLinkedList->size));
-
-    cout << "Number of elements in LinkedList: " << gamesLinkedList->size << endl;
-    cout << "*** Linear Search Test ***" << endl;
-    cout << "Before sorting:" << endl;
-    cout << "# Print only first 5 elements from linked list, for example:" << endl;
-    for (int i = 0; i < 5; i++)
-    {
-        printGameItem(gamesLinkedList->findNodeByIndex(i)->game);
-    }
-
-    cout << "Search number 1:" << endl;
-    cout << "Searching for " << randomNode1->game->name << "..." << endl;
-    int timeSpentBeforeSort1 = getTimeForLinearSearch(randomNode1, gamesLinkedList);
-    cout << "Single search time: " << timeSpentBeforeSort1 << " nanoseconds." << endl;
-    int totalTimeSpentBeforeSort1;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForLinearSearch(randomNode1, gamesLinkedList);
-        totalTimeSpentBeforeSort1 = totalTimeSpentBeforeSort1 + timeSpenti;
-    }
-    int averageBeforeSort1 = (totalTimeSpentBeforeSort1 + timeSpentBeforeSort1) / 6;
-    cout << "Average search time: " << averageBeforeSort1 << " nanoseconds." << endl
-         << endl;
-
-    cout << "Search number 2:" << endl;
-    cout << "Searching for " << randomNode2->game->name << "..." << endl;
-    int timeSpentBeforeSort2 = getTimeForLinearSearch(randomNode2, gamesLinkedList);
-    cout << "Single search time: " << timeSpentBeforeSort2 << " nanoseconds." << endl;
-    int totalTimeSpentBeforeSort2;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForLinearSearch(randomNode2, gamesLinkedList);
-        totalTimeSpentBeforeSort2 = totalTimeSpentBeforeSort2 + timeSpenti;
-    }
-    int averageBeforeSort2 = (totalTimeSpentBeforeSort2 + timeSpentBeforeSort2) / 6;
-    cout << "Average search time: " << averageBeforeSort2 << " nanoseconds." << endl
-         << endl;
-
-    cout << "Search number 3:" << endl;
-    cout << "Searching for " << randomNode3->game->name << "..." << endl;
-    int timeSpentBeforeSort3 = getTimeForLinearSearch(randomNode3, gamesLinkedList);
-    cout << "Single search time: " << timeSpentBeforeSort3 << " nanoseconds." << endl;
-    int totalTimeSpentBeforeSort3;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForLinearSearch(randomNode3, gamesLinkedList);
-        totalTimeSpentBeforeSort3 = totalTimeSpentBeforeSort3 + timeSpenti;
-    }
-    int averageBeforeSort3 = (totalTimeSpentBeforeSort3 + timeSpentBeforeSort3) / 6;
-    cout << "Average search time: " << averageBeforeSort3 << " nanoseconds." << endl
-         << endl;
-
-    // Record the start time for insertion sort
-    auto insertion_start_time = chrono::high_resolution_clock::now();
-
-    // Perform insertion sort
-    gamesLinkedList->insertionSort();
-
-    // Record the end time for insertion sort
-    auto insertion_end_time = chrono::high_resolution_clock::now();
-
-    // Calculate and print the time taken for insertion sort
-    auto insertion_duration = chrono::duration_cast<chrono::nanoseconds>(insertion_end_time - insertion_start_time);
-    cout << "Insertion Sort Time: " << insertion_duration.count() << " nanoseconds" << endl;
-
-    // Record the start time for quicksort
-    auto quicksort_start_time = chrono::high_resolution_clock::now();
-
-    // Perform quicksort on a copy of the list
-    gamesLinkedListCopyForSort->quickSort();
-
-    // Record the end time for quicksort
-    auto quicksort_end_time = chrono::high_resolution_clock::now();
-
-    // Calculate and print the time taken for quicksort
-    auto quicksort_duration = chrono::duration_cast<chrono::nanoseconds>(quicksort_end_time - quicksort_start_time);
-    cout << "Quick Sort Time: " << quicksort_duration.count() << " nanoseconds" << endl;
-    cout << "After sorting:" << endl;
-    cout << "# Print only first 5 elements from linked list, for example:" << endl;
-    for (int i = 0; i < 5; i++)
-    {
-        printGameItem(gamesLinkedList->findNodeByIndex(i)->game);
-    }
-    cout << endl;
-    cout << "*** Binary Search Test ***" << endl;
-
-    BinarySearchTree bst;
-
-    // Iterate through the LinkedList and insert each game into the BST
-    Node *current = gamesLinkedList->head;
-    while (current != NULL)
-    {
-        bst.insert(current->game);
-        current = current->next;
-    }
-
-    cout << "Search number 1:" << endl;
-    cout << "Searching for " << randomNode1->game->name << "..." << endl;
-    int timeSpentAfterSort1 = getTimeForBinarySearch(randomNode1, bst);
-    cout << "Single search time: " << timeSpentAfterSort1 << " nanoseconds." << endl;
-    int totalTimeSpentAfterSort1;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForBinarySearch(randomNode1, bst);
-        totalTimeSpentAfterSort1 = totalTimeSpentAfterSort1 + timeSpenti;
-    }
-    int averageAfterSort1 = (totalTimeSpentAfterSort1 + timeSpentAfterSort1) / 6;
-    cout << "Average search time: " << averageAfterSort1 << " nanoseconds." << endl
-         << endl;
-
-    cout << "Search number 2:" << endl;
-    cout << "Searching for " << randomNode2->game->name << "..." << endl;
-    int timeSpentAfterSort2 = getTimeForBinarySearch(randomNode2, bst);
-    cout << "Single search time: " << timeSpentAfterSort2 << " nanoseconds." << endl;
-    int totalTimeSpentAfterSort2;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForBinarySearch(randomNode2, bst);
-        totalTimeSpentAfterSort2 = totalTimeSpentAfterSort2 + timeSpenti;
-    }
-    int averageAfterSort2 = (totalTimeSpentAfterSort2 + timeSpentAfterSort2) / 6;
-    cout << "Average search time: " << averageAfterSort2 << " nanoseconds." << endl
-         << endl;
-
-    cout << "Search number 3:" << endl;
-    cout << "Searching for " << randomNode3->game->name << "..." << endl;
-    int timeSpentAfterSort3 = getTimeForBinarySearch(randomNode3, bst);
-    cout << "Single search time: " << timeSpentAfterSort3 << " nanoseconds." << endl;
-    int totalTimeSpentAfterSort3;
-    for (int i = 0; i < 5; i++)
-    {
-        int timeSpenti = getTimeForBinarySearch(randomNode3, bst);
-        totalTimeSpentAfterSort3 = totalTimeSpentAfterSort3 + timeSpenti;
-    }
-    int averageAfterSort3 = (totalTimeSpentAfterSort3 + timeSpentAfterSort3) / 6;
-    cout << "Average search time: " << averageAfterSort3 << " nanoseconds." << endl
-         << endl;
-
-
-    /* 
-    
-    QS 
-    LS 
-    BS
-
-    select a game,
-    do a linear search = LS
-    do a binary search = BS
-
-    LST = LS
-    BST = QS + BS
-    m = 0;
-    while(LST < BST){
-        LST += LS;
-        BST += BS
-        m++;
-    }
-
-    Break point m = xxxx between repeated linear searches and sort-once & multiple binary searches.
-     */
-
-
-
-    fclose(game_file);
-    return 0;
-}
-
 GAME *parseLine(char *game_line)
 {
-    GAME *game_ = new GAME;
+    GAME *game = new GAME;
 
     char *token = strsep(&game_line, ",");
-    game_->id = atoi(token);
+    game->id = atoi(token);
 
     token = strsep(&game_line, ",");
     if (token[0] == '"')
@@ -675,20 +484,20 @@ GAME *parseLine(char *game_line)
             name += ",";
             name += token;
         }
-        game_->name = new char[name.length() + 1];
-        strcpy(game_->name, name.substr(1, name.length() - 2).c_str()); // Remove leading and trailing quotes
+        game->name = new char[name.length() + 1];
+        strcpy(game->name, name.substr(1, name.length() - 2).c_str()); // Remove leading and trailing quotes
     }
     else
     {
-        game_->name = new char[strlen(token) + 1];
-        strcpy(game_->name, token);
+        game->name = new char[strlen(token) + 1];
+        strcpy(game->name, token);
     }
 
     token = strsep(&game_line, ",");
-    game_->avg_user_rating = atof(token);
+    game->avg_user_rating = atof(token);
 
     token = strsep(&game_line, ",");
-    game_->user_rating_count = atoi(token);
+    game->user_rating_count = atoi(token);
 
     token = strsep(&game_line, ",");
     if (token[0] == '"')
@@ -702,45 +511,296 @@ GAME *parseLine(char *game_line)
             developer += ",";
             developer += token;
         }
-        game_->developer = new char[developer.length() + 1];
-        strcpy(game_->developer, developer.substr(1, developer.length() - 2).c_str()); // Remove leading and trailing quotes
+        game->developer = new char[developer.length() + 1];
+        strcpy(game->developer, developer.substr(1, developer.length() - 2).c_str()); // Remove leading and trailing quotes
     }
     else
     {
-        game_->developer = new char[strlen(token) + 1];
-        strcpy(game_->developer, token);
+        game->developer = new char[strlen(token) + 1];
+        strcpy(game->developer, token);
     }
 
     token = strsep(&game_line, ",");
-    game_->size = atoi(token);
+    game->size = atoi(token);
 
-    return game_;
+    return game;
 }
 
-void printGameItem(GAME *game)
-{
-    cout << "# " << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
-}
+// Declare the random number generator outside the function
+std::mt19937 generator(static_cast<unsigned>(std::time(0)));
+bool initialized = false;
 
 int generateRandomNumber(int max)
 {
-    static bool initialized = false;
-
     // Seed the random number generator only if not already initialized
     if (!initialized)
     {
-        srand(static_cast<unsigned>(time(NULL)));
+        // No need to set the seed here
         initialized = true;
     }
 
-    // Generate a random number between 0 and 89
-    int random_number = rand() % (max + 1);
+    // Define the distribution for integers between 0 and max
+    std::uniform_int_distribution<int> distribution(0, max);
+
+    // Generate a random number
+    int random_number = distribution(generator);
     return random_number;
 }
-
-void swap(GAME *a, GAME *b)
+void swap(GAME *gameA, GAME *gameB)
 {
-    GAME t = *a;
-    *a = *b;
-    *b = t;
+    GAME temp = *gameA;
+    *gameA = *gameB;
+    *gameB = temp;
+}
+
+int main()
+{
+    FILE *gameFile = fopen("games.csv", "r");
+
+    if (!gameFile)
+    {
+        // Print an error message and exit if the file cannot be opened
+        printf("Error opening file \n");
+        exit(EXIT_FAILURE);
+    }
+
+    LinkedList *gamesLinkedList = new LinkedList(NULL);
+
+    char *line = NULL;
+    size_t n = 0;
+    ssize_t nbytes;
+
+    // Read and skip the header line, which contains column names
+    getline(&line, &n, gameFile);
+
+    // Read and process each line of the abilities.csv file
+    while ((nbytes = getline(&line, &n, gameFile)) > 0)
+    {
+        // Set the last character of the line to null terminator
+        line[nbytes - 1] = 0;
+
+        char *linep = line;
+        // Create a data structure to represent each game.
+        GAME *game = parseLine(linep);
+        // Store game in linkedList
+        Node *newGameNode = new Node(game);
+        // If there exist any duplicates based on name, store one with the higher “user rating count” only.
+        Node *duplicate = gamesLinkedList->findNodeByGameName(newGameNode->game->name);
+        if (duplicate != NULL)
+        {
+            // printGameItem(duplicate->game);
+            // printGameItem(newGameNode->game);
+            if (newGameNode->game->user_rating_count > duplicate->game->user_rating_count)
+            {
+                // remove duplicate
+                gamesLinkedList->remove(duplicate);
+                // insert newGameNode
+                gamesLinkedList->insertTail(newGameNode);
+            }
+        }
+        else
+        {
+            gamesLinkedList->insertTail(newGameNode);
+        }
+    }
+
+    // Make a copy to be used for quick sort
+    LinkedList *gamesLinkedListCopyForQuickSort = copyLinkedList(gamesLinkedList);
+    // Make a copy to be used for linear search test later
+    LinkedList *gamesLinkedListCopyForLinearSearch = copyLinkedList(gamesLinkedList);
+
+    
+    cout << "Number of elements in LinkedList: " << gamesLinkedList->size << endl << endl;
+
+    cout << "*** Linear Search Test ***" << endl << endl;
+
+    cout << "Before sorting:" << endl << endl;
+
+    for (int i = 0; i < 5; i++)
+    {
+        GAME *game = new GAME;
+        game = gamesLinkedList->getGameByIndex(i)->game;
+        cout << "# " << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
+    }
+
+    cout << endl;
+
+
+    Node *selectedGame1 = gamesLinkedList->getGameByIndex(generateRandomNumber(gamesLinkedList->size));
+    Node *selectedGame2 = gamesLinkedList->getGameByIndex(generateRandomNumber(gamesLinkedList->size));
+    Node *selectedGame3 = gamesLinkedList->getGameByIndex(generateRandomNumber(gamesLinkedList->size));
+    Node *selectedGame4 = gamesLinkedList->getGameByIndex(generateRandomNumber(gamesLinkedList->size));
+
+
+    cout << "Search number 1:" << endl;
+    cout << "Searching for " << selectedGame1->game->name << "..." << endl;
+
+    int linearSearchTime1 = getTimeForLinearSearch(selectedGame1, gamesLinkedList);
+    
+    cout << "Single search time: " << linearSearchTime1 << " nanoseconds." << endl;
+
+    int totalLinearSearchTime1 = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        // int timeSpenti = getTimeForLinearSearch(selectedGame1, gamesLinkedList);
+        totalLinearSearchTime1 = totalLinearSearchTime1 + getTimeForLinearSearch(selectedGame1, gamesLinkedList);;
+    }
+
+    int averageLinearSearchTime1 = (totalLinearSearchTime1 + linearSearchTime1) / 11;
+    cout << "Average search time: " << averageLinearSearchTime1 << " nanoseconds." << endl << endl;
+
+    cout << "Search number 2:" << endl;
+    cout << "Searching for " << selectedGame2->game->name << "..." << endl;
+
+    int linearSearchTime2 = getTimeForLinearSearch(selectedGame2, gamesLinkedList);
+
+    cout << "Single search time: " << linearSearchTime2 << " nanoseconds." << endl;
+
+    int totalLinearSearchTime2 = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        totalLinearSearchTime2 = totalLinearSearchTime2 + getTimeForLinearSearch(selectedGame2, gamesLinkedList);;
+    }
+
+    int averageLinearSearchTime2 = (totalLinearSearchTime2 + linearSearchTime2) / 11;
+
+    cout << "Average search time: " << averageLinearSearchTime2 << " nanoseconds." << endl << endl;
+
+    cout << "Search number 3:" << endl;
+    cout << "Searching for " << selectedGame3->game->name << "..." << endl;
+
+    int linearSearchTime3 = getTimeForLinearSearch(selectedGame3, gamesLinkedList);
+
+    cout << "Single search time: " << linearSearchTime3 << " nanoseconds." << endl;
+
+    int totalLinearSearchTime3 = 0;   
+    for (int i = 0; i < 10; i++)
+    {
+        int timeSpenti = getTimeForLinearSearch(selectedGame3, gamesLinkedList);
+        totalLinearSearchTime3 = totalLinearSearchTime3 + timeSpenti;
+    }
+    int averageBeforeSort3 = (totalLinearSearchTime3 + linearSearchTime3) / 11;
+    cout << "Average search time: " << averageBeforeSort3 << " nanoseconds." << endl << endl;
+
+    // Record the start time for insertion sort
+    struct timespec insertion_sort_start, insertion_sort_end;
+    clock_gettime(CLOCK_REALTIME, &insertion_sort_start);
+
+    // Perform insertion sort
+    gamesLinkedList->insertionSort();
+
+    // Record the end time for insertion sort
+    clock_gettime(CLOCK_REALTIME, &insertion_sort_end);
+
+    // Calculate and print the time taken for insertion sort
+    long long insertion_sort_time = (insertion_sort_end.tv_sec - insertion_sort_start.tv_sec) * NANOSECONDS_PER_SECOND + (insertion_sort_end.tv_nsec - insertion_sort_start.tv_nsec);
+    cout << "Insertion Sort Time: " << insertion_sort_time << " nanoseconds" << endl;
+
+    // Record the start time for quicksort
+    struct timespec quicksort_start, quicksort_end;
+    clock_gettime(CLOCK_REALTIME, &quicksort_start);
+
+    // Perform quicksort on a copy of the list
+    gamesLinkedListCopyForQuickSort->quickSort();
+
+    // Record the end time for quicksort
+    clock_gettime(CLOCK_REALTIME, &quicksort_end);
+
+    // Calculate and print the time taken for quicksort
+    long long quicksort_time = (quicksort_end.tv_sec - quicksort_start.tv_sec) * NANOSECONDS_PER_SECOND + (quicksort_end.tv_nsec - quicksort_start.tv_nsec);
+    cout << "Quick Sort Time: " << quicksort_time << " nanoseconds" << endl << endl;
+    cout << "After sorting:" << endl <<endl;
+
+    for (int i = 0; i < 5; i++)
+    {
+        GAME *game = new GAME;
+
+        game = gamesLinkedList->getGameByIndex(i)->game;
+
+        cout << "# " << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
+    }
+
+    cout << endl;
+
+    cout << "*** Binary Search Test ***" << endl << endl;
+
+    BinarySearchTree bst;
+
+    // Iterate through the LinkedList and insert each game into the BST
+    Node *current = gamesLinkedList->head;
+    while (current != NULL)
+    {
+        bst.insert(current->game);
+        current = current->next;
+    }
+
+    cout << "Search number 1:" << endl;
+    cout << "Searching for " << selectedGame1->game->name << "..." << endl;
+
+    int binarySearchTime1 = getTimeForBinarySearch(selectedGame1, bst);
+
+    cout << "Single search time: " << binarySearchTime1 << " nanoseconds." << endl;
+
+    int totalBinarySearchTime1 = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        totalBinarySearchTime1 = totalBinarySearchTime1 + getTimeForBinarySearch(selectedGame1, bst);
+    }
+
+    int averageBinarySearchTime1 = (totalBinarySearchTime1 + binarySearchTime1) / 11;
+    cout << "Average search time: " << averageBinarySearchTime1 << " nanoseconds." << endl << endl;
+
+    cout << "Search number 2:" << endl;
+    cout << "Searching for " << selectedGame2->game->name << "..." << endl;
+
+    int binarySearchTime2 = getTimeForBinarySearch(selectedGame2, bst);
+
+    cout << "Single search time: " << binarySearchTime2 << " nanoseconds." << endl;
+    
+    int totalBinarySearchTime2 = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        totalBinarySearchTime2 = totalBinarySearchTime2 + getTimeForBinarySearch(selectedGame2, bst);
+    }
+
+    int averageBinarySearchTime2 = (totalBinarySearchTime2 + binarySearchTime2) / 11;
+    cout << "Average search time: " << averageBinarySearchTime2 << " nanoseconds." << endl << endl;
+
+    cout << "Search number 3:" << endl;
+    cout << "Searching for " << selectedGame3->game->name << "..." << endl;
+
+    int binarySearchTime3 = getTimeForBinarySearch(selectedGame3, bst);
+
+    cout << "Single search time: " << binarySearchTime2 << " nanoseconds." << endl;
+
+    int totalBinarySearchTime3 = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        totalBinarySearchTime3 = totalBinarySearchTime3 + getTimeForBinarySearch(selectedGame3, bst);
+    }
+    int averageAfterSort3 = (totalBinarySearchTime3 + binarySearchTime2) / 11;
+    cout << "Average search time: " << averageAfterSort3 << " nanoseconds." << endl << endl;
+
+   //Break point
+
+    int linearSearchTime4 = getTimeForLinearSearch(selectedGame4, gamesLinkedList);
+    int binarySearchTime4 = getTimeForBinarySearch(selectedGame4, bst);
+
+    cout << "Single linear search time : " << linearSearchTime4 << " nanoseconds." << endl;
+    cout << "Single binary search time: " << binarySearchTime4 << " nanoseconds." << endl;
+
+    int totalBinarySearchTime4 = quicksort_time + binarySearchTime4;
+    int m = 0;
+    int totalLinearSearchTime4 = linearSearchTime4;
+    while(totalLinearSearchTime4 < totalBinarySearchTime4){
+        totalLinearSearchTime4+=linearSearchTime4;
+        totalBinarySearchTime4+=binarySearchTime4;
+        m++;
+    }
+
+    cout <<  "Break point m = " << m <<" between repeated linear searches and sort-once & multiple binary searches."<<endl; 
+   
+
+    fclose(gameFile);
+    return 0;
 }
