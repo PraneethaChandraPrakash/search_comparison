@@ -185,49 +185,65 @@ void quickSortLinkedList(LinkedList *list)
     quicksort(list->head, list->tail);
 }
 // Function to parse a line and extract game data
-void parseLine(char *line, struct Game *newGame)
-{
-    // Tokenize the input line using ',' as a delimiter
+void parseLine(char *line, Game *newGame) {
     char *token;
-
-    // Initialize the index to keep track of the field being processed
     int index = 0;
 
-    // Iterate through tokens in the line until the end of the line or up to 6 fields
-    while ((token = strsep(&line, ",")) != NULL && index < 6)
-    {
-        // Switch statement to assign values to corresponding fields in the newGame structure
-        switch (index)
-        {
-        case 0:
-            // Convert the token to an integer and assign it to the 'id' field
-            newGame->id = atoi(token);
-            break;
-        case 1:
-            // Copy the token to the 'name' field, ensuring it fits within the size of the field
-            strncpy(newGame->name, token, sizeof(newGame->name));
-            break;
-        case 2:
-            // Convert the token to a floating-point number and assign it to 'avg_user_rating'
-            newGame->avg_user_rating = atof(token);
-            break;
-        case 3:
-            // Convert the token to an integer and assign it to 'user_rating_count'
-            newGame->user_rating_count = atoi(token);
-            break;
-        case 4:
-            // Copy the token to the 'developer' field, ensuring it fits within the size of the field
-            strncpy(newGame->developer, token, sizeof(newGame->developer));
-            break;
-        case 5:
-            // Convert the token to an integer and assign it to the 'size' field
-            newGame->size = atoi(token);
-            break;
+    token = strsep(&line, ",");
+    newGame->id = atoi(token);
+
+    token = strsep(&line, ",");
+    if (token[0] == '"') {
+        char name[10000];
+        strcpy(name, &token[1]);
+
+        while (line != NULL && name[strlen(name) - 1] != '"') {
+            token = strsep(&line, ",");
+            if (token != NULL) {
+                strcat(name, ",");
+                strcat(name, token);
+            }
         }
-        // Move to the next field
-        index++;
+        name[strlen(name) - 1] = '\0';
+        strcpy(newGame->name, name);
+    } else {
+        strcpy(newGame->name, token);
     }
+
+    token = strsep(&line, ",");
+    newGame->avg_user_rating = atof(token);
+
+    token = strsep(&line, ",");
+    newGame->user_rating_count = atoi(token);
+
+    token = strsep(&line, ",");
+    if (token[0] == '"') {
+        char developer[10000];
+        strcpy(developer, &token[1]);
+
+        while (line != NULL && developer[strlen(developer) - 1] != '"') {
+            token = strsep(&line, ",");
+            if (token != NULL) {
+                strcat(developer, ",");
+                strcat(developer, token);
+            }
+        }
+        developer[strlen(developer) - 1] = '\0';
+        strcpy(newGame->developer, developer);
+    } else {
+        strcpy(newGame->developer, token);
+    }
+
+    token = strsep(&line, ",");
+    newGame->size = atoi(token);
+    // printf("ID: %d\n", newGame->id);
+    // printf("Name: %s\n", newGame->name);
+    // printf("Average User Rating: %.2f\n", newGame->avg_user_rating);
+    // printf("User Rating Count: %d\n", newGame->user_rating_count);
+    // printf("Developer: %s\n", newGame->developer);
+    // printf("Size: %d\n", newGame->size);
 }
+
 
 // Function to read data from a file and store it in a doubly linked list
 LinkedList readAndStoreData(char *filename)
@@ -607,6 +623,7 @@ int main()
                currentSorted->user_rating_count, currentSorted->developer, currentSorted->size);
         currentSorted = currentSorted->next;
     }
+    writeListToFile(sortedGamesLinkedList, "sorted_output.txt");
 
     // Measure time for insertion sort
     long insertionSortTime = measureTime(insertionSort, &sortedGamesLinkedList);
