@@ -560,6 +560,45 @@ void getRandomGames(LinkedList *gamesLinkedList, char searchNames[][100], int nu
     }
 }
 
+// Function to copy a linked list
+LinkedList copyList(LinkedList original)
+{
+    LinkedList newList;
+    newList.head = NULL;
+
+    Game *currentOriginal = original.head;
+    Game *prevNew = NULL;
+
+    while (currentOriginal != NULL)
+    {
+        Game *newNode = (Game *)malloc(sizeof(Game));
+
+        // Copy data from the original node to the new node
+        newNode->id = currentOriginal->id;
+        strcpy(newNode->name, currentOriginal->name);
+        newNode->avg_user_rating = currentOriginal->avg_user_rating;
+        newNode->user_rating_count = currentOriginal->user_rating_count;
+        strcpy(newNode->developer, currentOriginal->developer);
+        newNode->size = currentOriginal->size;
+        newNode->next = NULL;
+
+        // Update pointers
+        if (prevNew == NULL)
+        {
+            newList.head = newNode;
+        }
+        else
+        {
+            prevNew->next = newNode;
+        }
+
+        prevNew = newNode;
+        currentOriginal = currentOriginal->next;
+    }
+
+    return newList;
+}
+
 int main()
 {
     char filename[] = "games.csv";
@@ -599,18 +638,30 @@ int main()
     for (int i = 0; i < numSearches; i++)
     {
         long searchTime = searchTimeMeasure(linearSearch, &gamesLinkedList, searchNames[i]);
+        long totalSearchTime =  0;
         printf("\n\nSearch number %d:", i+1);
         printf("\nSearching for %s...", searchNames[i]);
         printf("\nSingle search time: %ld nanoseconds.\n", searchTime);
-        totalSearchTime += searchTime;
-
-        printf("Average search time: %ld nanoseconds.\n", totalSearchTime / (i + 1));
+        for (int i = 0; i < 5; i++)
+    {
+        long timeSpent = searchTimeMeasure(linearSearch, &gamesLinkedList, searchNames[i]);
+        totalSearchTime = totalSearchTime + timeSpent;
     }
 
-    // Sort the linked list by name using insertion sort
-    insertionSort(&sortedGamesLinkedList);
+        printf("Average search time: %ld nanoseconds.\n",  (totalSearchTime + searchTime) / 6);
+    }
 
-    quickSortLinkedList(&sortedGamesLinkedList);
+      // Create a copy of gamesLinkedList for insertion sort
+    LinkedList copyForInsertionSort = copyList(gamesLinkedList);
+
+    // Sort the linked list by name using insertion sort
+    insertionSort(&copyForInsertionSort);
+
+
+    // Create another copy of gamesLinkedList for quicksort
+    LinkedList copyForQuickSort = copyList(gamesLinkedList);
+
+    quickSortLinkedList(&copyForQuickSort);
     Game *currentSorted = sortedGamesLinkedList.head;
 
     printf("\n\nAfter sorting: \n\n");
@@ -636,25 +687,25 @@ int main()
     printf("*** Binary Search Test ***\n\n");
     BSTNode *bstRoot = buildBSTFromList(&sortedGamesLinkedList);
 
-    // Search for specific games and measure search time
-    long totalBinarySearchTime = 0;
-
     for (int i = 0; i < numSearches; i++)
     {
-        // long searchTime = binarySearch(bstRoot, searchNames[i]);
+        long totalBinarySearchTime = 0;
         long searchTime = searchTimeMeasure(binarySearch, bstRoot, searchNames[i]);
-        printf("Search number %d:\n", i+1);
-        printf("Searching for %s...\n", searchNames[i]);
-        printf("Single search time: %ld nanoseconds.\n", searchTime);
-        totalBinarySearchTime += searchTime;
-
-        printf("Average binary search time: %ld nanoseconds.\n\n", totalBinarySearchTime / (i + 1));
+        printf("\n\nSearch number %d:", i+1);
+        printf("\nSearching for %s...", searchNames[i]);
+        printf("\nSingle search time: %ld nanoseconds.\n", searchTime);
+        for (int i = 0; i < 5; i++)
+    {
+        long timeSpent = searchTimeMeasure(linearSearch, &gamesLinkedList, searchNames[i]);
+        totalBinarySearchTime = totalBinarySearchTime + timeSpent;
     }
 
+        printf("Average search time: %ld nanoseconds.\n",  (totalBinarySearchTime + searchTime) / 6);
+    }
     int m = 1000; // You can adjust the value of m
 
     // Iterate through different values of m
-    for (int m = 1; m <= 1000; m += 50)
+    for (int m = 1; m <= 2300; m += 50)
     {
         // Perform linear searches and measure total search time
         long totalLinearSearchTime = 0;
@@ -665,8 +716,8 @@ int main()
         }
 
         // Sort the linked list by name using insertion sort for sorting once
-        LinkedList sortedGamesLinkedList = readAndStoreData(filename);
-        insertionSort(&sortedGamesLinkedList);
+        // LinkedList sortedGamesLinkedList = readAndStoreData(filename);
+        // insertionSort(&sortedGamesLinkedList);
 
         // Measure time for sorting once using insertion sort
         long insertionSortTime = measureTime(insertionSort, &sortedGamesLinkedList);
@@ -681,11 +732,11 @@ int main()
         }
 
         // Print the results for the current value of m
-        printf("m = %d: Linear Search Time = %ld, Insertion Sort Time = %ld, Binary Search Time = %ld\n",
-               m, totalLinearSearchTime, insertionSortTime, totalBinarySearchTime);
+        printf("m = %d: Linear Search Time = %ld, Quick Sort Time = %ld, Binary Search Time = %ld\n",
+               m, totalLinearSearchTime, quickSortTime, totalBinarySearchTime);
 
         // Check if linear searches are more efficient than sorting once and binary searches
-        if (totalLinearSearchTime < insertionSortTime + totalBinarySearchTime)
+        if (totalLinearSearchTime < quickSortTime + totalBinarySearchTime)
         {
             printf("Break point m = %d between repeated linear searches and sort-once & multiple binary searches.\n",m);
             break;
