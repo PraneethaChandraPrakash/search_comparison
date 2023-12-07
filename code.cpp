@@ -3,6 +3,7 @@
 #include <string.h>
 #include <random>
 #include <ctime>
+#include <chrono>
 #include <fstream>
 
 using namespace std;
@@ -425,21 +426,20 @@ private:
 // Measure the time taken for linear search in a linked list
 long long measureLinearSearchTime(Node *gameNode, LinkedList *list)
 {
-   // Start measuring time
-    struct timespec start, end;
-    clock_gettime(CLOCK_REALTIME, &start);
-
+    // Start measuring time
+    auto startTime = chrono::high_resolution_clock::now();
 
     // Perform the linear search
     Node *foundNode = list->linearSearch(gameNode->game->name);
 
-   // Stop measuring time
-    clock_gettime(CLOCK_REALTIME, &end);
+    // Stop measuring time
+    auto endTime = chrono::high_resolution_clock::now();
 
     // Calculate and return the search time in nanoseconds
-    long long searchTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
+    auto searchTime = chrono::duration_cast<chrono::nanoseconds>(endTime - startTime);
 
-    return searchTime;
+    return searchTime.count();
+    
 }
 
 // Measure the time taken for binary search in a binary search tree
@@ -447,19 +447,19 @@ long long measureBinarySearchTime(Node *gameNode, BinarySearchTree &bst)
 
 {
     // Start measuring time
-    struct timespec start, end;
-    clock_gettime(CLOCK_REALTIME, &start);
+    auto startTime = chrono::high_resolution_clock::now();
 
     // Perform the binary search
     bst.search(gameNode->game->name);
     
     // Stop measuring time
-    clock_gettime(CLOCK_REALTIME, &end);
+    auto endTime = chrono::high_resolution_clock::now();
 
     // Calculate and return the search time in nanoseconds
-    long long searchTime = (end.tv_sec - start.tv_sec) * NANOSECONDS_PER_SECOND + (end.tv_nsec - start.tv_nsec);
+    auto searchTime = chrono::duration_cast<chrono::nanoseconds>(endTime - startTime);
 
-    return searchTime;
+    return searchTime.count();
+
 }
 
 
@@ -754,24 +754,24 @@ int main()
 
 
     // Start measuring time for insertion sort
-    struct timespec insertion_sort_start, insertion_sort_end;
-    clock_gettime(CLOCK_REALTIME, &insertion_sort_start);
+    auto insertionSortStart = chrono::high_resolution_clock::now();
 
     // Perform insertion sort
     gamesLinkedList->insertionSort();
 
     // Stop measuring time for insertion sort
-    clock_gettime(CLOCK_REALTIME, &insertion_sort_end);
+    auto insertionSortEnd = chrono::high_resolution_clock::now();
+
 
     // Start measuring time for quicksort
-    struct timespec quicksort_start, quicksort_end;
-    clock_gettime(CLOCK_REALTIME, &quicksort_start);
+    auto quickSortStart = chrono::high_resolution_clock::now();
 
     // Perform quicksort
     quickSortList->quickSort();
 
     // Stop measuring time for quicksort
-    clock_gettime(CLOCK_REALTIME, &quicksort_end);
+    auto quickSortEnd = chrono::high_resolution_clock::now();
+
 
     cout << "After sorting:" << endl <<endl;
 
@@ -790,12 +790,13 @@ int main()
     cout << endl << endl;
 
      // Calculate and print the time taken for insertion sort
-    long long insertion_sort_time = (insertion_sort_end.tv_sec - insertion_sort_start.tv_sec) * NANOSECONDS_PER_SECOND + (insertion_sort_end.tv_nsec - insertion_sort_start.tv_nsec);
-    cout << "Time for insertion sort: " << insertion_sort_time << " nanoseconds" << endl;
+    auto insertionSortTime = chrono::duration_cast<chrono::nanoseconds>(insertionSortEnd - insertionSortStart);
+
+    cout << "Time for insertion sort: " << insertionSortTime.count() << " nanoseconds" << endl;
     
      // Calculate and print the time taken for quicksort
-    long long quicksort_time = (quicksort_end.tv_sec - quicksort_start.tv_sec) * NANOSECONDS_PER_SECOND + (quicksort_end.tv_nsec - quicksort_start.tv_nsec);
-    cout << "Time for quick sort: " << quicksort_time << " nanoseconds" << endl << endl;
+    auto quickSortTime = chrono::duration_cast<chrono::nanoseconds>(quickSortEnd - quickSortStart);
+    cout << "Time for quick sort: " << quickSortTime.count() << " nanoseconds" << endl << endl;
 
     cout << "*** Binary Search Test ***" << endl << endl;
 
@@ -880,7 +881,7 @@ int main()
     int binarySearchTime4 = measureBinarySearchTime(selectedGame4, bst);
 
     // Calculate the total time taken for quicksort and binary search
-    int totalBinarySearchTime4 = quicksort_time + binarySearchTime4;
+    int totalBinarySearchTime4 = quickSortTime.count() + binarySearchTime4;
 
     // Initialize the break point
     int m = 0;
