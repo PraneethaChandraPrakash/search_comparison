@@ -3,6 +3,7 @@
 #include <string.h>
 #include <random>
 #include <ctime>
+#include <fstream>
 
 using namespace std;
 
@@ -859,7 +860,7 @@ int main()
 
     // Measure the time spent on a single binary search for the selected item 
     int binarySearchTime3 = measureBinarySearchTime(selectedGame3, bst);
-    cout << "Single search time: " << binarySearchTime2 << " nanoseconds." << endl;
+    cout << "Single search time: " << binarySearchTime3 << " nanoseconds." << endl;
 
     // Measure the total time spent on 10 binary searches for the selected item to test the speed of the algorithm
     int totalBinarySearchTime3 = 0;
@@ -886,7 +887,8 @@ int main()
 
     // Initialize the total time taken for linear search to the time taken for one linear search
     int totalLinearSearchTime4 = linearSearchTime4;
-
+    
+   cout <<  "Break point m = " << m <<"Linear: "<<totalLinearSearchTime4<<"Binary: "<<totalBinarySearchTime4<< endl;
     // Continue looping until the total time taken for linear search becomes better than the total time taken for binary search
     while(totalLinearSearchTime4 < totalBinarySearchTime4){
         // Increment the total time taken for linear search by adding the time taken for one linear search
@@ -897,7 +899,10 @@ int main()
 
         // Increment the counter variable m
         m++;
+
     }
+
+    cout <<  "Break point m = " << m <<"Linear: "<<totalLinearSearchTime4<<"Binary: "<<totalBinarySearchTime4<< endl;
 
     // Print the break point m where repeated linear searches become more efficient than quicksort and multiple binary searches
     cout <<  "Break point m = " << m <<" between repeated linear searches and sort-once & multiple binary searches." << endl;
