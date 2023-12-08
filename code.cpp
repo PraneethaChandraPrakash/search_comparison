@@ -4,21 +4,16 @@
 #include <random>
 #include <ctime>
 #include <chrono>
-#include <fstream>
 
 using namespace std;
-
-// Define a constant for nanoseconds per second
-#define NANOSECONDS_PER_SECOND 1000000000L
-
 
 // Define a structure to represent a game
 struct GAME
 {
     int id;
     char *name;
-    float avg_user_rating;
-    int user_rating_count;
+    float avgUserRating;
+    int userRatingCount;
     char *developer;
     int size;
 };
@@ -451,7 +446,7 @@ long long measureBinarySearchTime(Node *gameNode, BinarySearchTree &bst)
 
     // Perform the binary search
     bst.search(gameNode->game->name);
-    
+
     // Stop measuring time
     auto endTime = chrono::high_resolution_clock::now();
 
@@ -531,11 +526,11 @@ GAME *parseLine(char *game_line)
 
     // Tokenize and extract the average user rating
     token = strsep(&game_line, ",");
-    game->avg_user_rating = atof(token);
+    game->avgUserRating = atof(token);
 
     // Tokenize and extract the user rating count
     token = strsep(&game_line, ",");
-    game->user_rating_count = atoi(token);
+    game->userRatingCount = atoi(token);
 
     // Tokenize and extract the developer field, handling quoted names if present
     token = strsep(&game_line, ",");
@@ -640,7 +635,7 @@ int main()
         if (duplicate != NULL)
         {
 
-            if (newGameNode->game->user_rating_count > duplicate->game->user_rating_count)
+            if (newGameNode->game->userRatingCount > duplicate->game->userRatingCount)
             {
                 // Remove the existing duplicate node
                 gamesLinkedList->remove(duplicate);
@@ -678,7 +673,7 @@ int main()
         // Retrieve the i-th game node from gamesLinkedList and access the game object
         game = gamesLinkedList->getGameByIndex(i)->game;
 
-        cout << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
+        cout << game->id << ", " << game->name << ", " << game->avgUserRating << ", " << game->userRatingCount << ", " << game->developer << ", " << game->size << endl;
     }
 
     cout << endl;
@@ -784,17 +779,16 @@ int main()
         // Retrieve the i-th game node from gamesLinkedList and access the game object
         game = gamesLinkedList->getGameByIndex(i)->game;
 
-        cout << game->id << ", " << game->name << ", " << game->avg_user_rating << ", " << game->user_rating_count << ", " << game->developer << ", " << game->size << endl;
+        cout << game->id << ", " << game->name << ", " << game->avgUserRating << ", " << game->userRatingCount << ", " << game->developer << ", " << game->size << endl;
     }
 
     cout << endl << endl;
 
-     // Calculate and print the time taken for insertion sort
+    // Calculate and print the time taken for insertion sort
     auto insertionSortTime = chrono::duration_cast<chrono::nanoseconds>(insertionSortEnd - insertionSortStart);
-
     cout << "Time for insertion sort: " << insertionSortTime.count() << " nanoseconds" << endl;
     
-     // Calculate and print the time taken for quicksort
+    // Calculate and print the time taken for quicksort
     auto quickSortTime = chrono::duration_cast<chrono::nanoseconds>(quickSortEnd - quickSortStart);
     cout << "Time for quick sort: " << quickSortTime.count() << " nanoseconds" << endl << endl;
 
@@ -889,7 +883,6 @@ int main()
     // Initialize the total time taken for linear search to the time taken for one linear search
     int totalLinearSearchTime4 = linearSearchTime4;
     
-   cout <<  "Break point m = " << m <<"Linear: "<<totalLinearSearchTime4<<"Binary: "<<totalBinarySearchTime4<< endl;
     // Continue looping until the total time taken for linear search becomes better than the total time taken for binary search
     while(totalLinearSearchTime4 < totalBinarySearchTime4){
         // Increment the total time taken for linear search by adding the time taken for one linear search
@@ -903,9 +896,7 @@ int main()
 
     }
 
-    cout <<  "Break point m = " << m <<"Linear: "<<totalLinearSearchTime4<<"Binary: "<<totalBinarySearchTime4<< endl;
-
-    // Print the break point m where repeated linear searches become more efficient than quicksort and multiple binary searches
+    // Print the break point m at which the linear search becomes less efficient than the binary search
     cout <<  "Break point m = " << m <<" between repeated linear searches and sort-once & multiple binary searches." << endl;
 
     // Close the file 
